@@ -1,0 +1,310 @@
+// ===================================================================== \\
+// ===================================================================== \\
+// ========================  _____ ========  _ 	© ====================== \\
+// ======================== | ___ \ ======= | | ======================== \\
+// ======================== | |_/ / __ _  __| |	======================== \\
+// ======================== | ___ \/ _` |/ _` |	======================== \\
+// ======================== | |_/ / (_| | (_| |	======================== \\
+// ======================== \____/ \__,_|\__,_|	======================== \\
+// ===================================================================== \\
+// ===================================================================== \\
+// Developed by Gabriel dos Prazeres - [Bad] © ========================= \\
+// All rights reserved. Contact: +55 91 99322-5657 ===================== \\
+// ===================================================================== \\
+// ===================================================================== \\
+// System: Announcement and Log on Normal/MvP/Mini-Boss Card drop ====== \\
+// ===================================================================== \\
+// Compatible with: Emulator rAthena - 02/10/2021 ====================== \\
+// ===================================================================== \\
+// Description: ======================================================== \\
+// Announces and saves a log in DB when dropping Cards ================= \\
+// ===================================================================== \\
+// Version 1.0 ========================================================= \\
+// ===================================================================== \\
+// Discord: Bad#5743 =================================================== \\
+// ===================================================================== \\
+
+From 7dd31321be705d467d561a70f4bbfda11c070ed8 Mon Sep 17 00:00:00 2001
+From: Gabriel dos Prazeres <gabrieldosprazeres@hotmail.com.br>
+Date: Mon, 4 Oct 2021 11:07:07 -0300
+Subject: [PATCH] Finishing announcement and log feature when dropping cards
+
+---
+ conf/battle/drops.conf     | 76 ++++++++++++++++++++++++++++++++++++++
+ conf/msg_conf/map_msg.conf |  2 +
+ sql-files/main.sql         | 51 +++++++++++++++++++++++++
+ src/map/battle.cpp         | 15 ++++++++
+ src/map/battle.hpp         | 15 ++++++++
+ src/map/mob.cpp            | 46 +++++++++++++++++++++++
+ 6 files changed, 205 insertions(+)
+
+diff --git a/conf/battle/drops.conf b/conf/battle/drops.conf
+index 918cb5ea4..f024676cb 100644
+--- a/conf/battle/drops.conf
++++ b/conf/battle/drops.conf
+@@ -189,3 +189,79 @@ idletime_mer_option: 0x1F
+ // If drop rate was below this amount and bonus is applied to it, the bonus can't make it exceed this amount.
+ drop_rate_cap: 9000
+ drop_rate_cap_vip: 9000
++
++// ======================== General System Configuration ======================== \\
++
++// Announcement system when dropping MvP Card, Mini-Boss Card and Normal Card
++// Logging system for the drop of these cards
++// Check yes to enable the entire system or no to disable the entire system
++// Default: yes
++announcement_and_log_system: yes
++
++// ================================ [Bad] ======================================= \\
++
++// ============================ Setup for Normal Card =========================== \\
++
++// Normal Cards announcement and log system
++// Check yes to enable and no to disable
++// Default: yes
++normal_card_announce_system: yes
++
++// Activate or deactivate only the ad
++// Default: yes
++normal_card_announce: yes
++
++// Enable or disable logging only
++// Note: To enable logging, you must insert the table into the database
++// Default: yes
++dropped_normal_card_log: yes
++
++// Put the color of the ad you want
++// Default: 0xFFBB00 (0x + hex color)
++set_normal_announce_color: 0xFFBB00
++
++// ================================ [Bad] ======================================= \\
++
++// ============================ Setup for MvP Card ============================== \\
++
++// MvP Cards Logging and Announcement System
++// Check yes to enable and no to disable
++// Default: yes
++mvp_card_announce_system: yes
++
++// Activate or deactivate only the ad
++// Default: yes
++mvp_card_announce: yes
++
++// Enable or disable logging only
++// Note: To enable logging, you must insert the table into the database
++// Default: yes
++dropped_mvp_card_log: yes
++
++// Put the color of the ad you want
++// Default: 0xFFBB00 (0x + hex color)
++set_mvp_announce_color: 0xFFBB00
++
++// ================================ [Bad] ======================================= \\
++
++// ========================= Setup for Mini-Boss Card =========================== \\
++
++// Mini-Boss Cards announcement and log system
++// Check yes to enable and no to disable
++// Default: yes
++mini_boss_card_announce_system: yes
++
++// Activate or deactivate only the ad
++// Default: yes
++mini_boss_card_announce: yes
++
++// Enable or disable logging only
++// Note: To enable logging, you must insert the table into the database
++// Default: yes
++dropped_mini_boss_card_log: yes
++
++// Put the color of the ad you want
++// Default: 0xFFBB00 (0x + hex color)
++set_mini_boss_announce_color: 0xFFBB00
++
++// ================================ [Bad] ======================================= \\
+\ No newline at end of file
+diff --git a/conf/msg_conf/map_msg.conf b/conf/msg_conf/map_msg.conf
+index 4b10ebfba..9d88a2561 100644
+--- a/conf/msg_conf/map_msg.conf
++++ b/conf/msg_conf/map_msg.conf
+@@ -466,6 +466,8 @@
+ 
+ 451: Cash Shop is disabled on this map.
+ 
++452: %s defeated %s in %s and dropped %s (%0.02f%%)
++
+ // Message System
+ 460: Please enter a valid language (usage: @langtype <language>).
+ 461: Language is now set to %s.
+diff --git a/sql-files/main.sql b/sql-files/main.sql
+index 334a37d57..65e659724 100644
+--- a/sql-files/main.sql
++++ b/sql-files/main.sql
+@@ -1081,3 +1081,54 @@ CREATE TABLE IF NOT EXISTS `vendings` (
+   `autotrade` tinyint(4) NOT NULL,
+   PRIMARY KEY (`id`)
+ ) ENGINE=MyISAM;
++
++--
++-- Table structure for table `dropped_normal_card_log` [Bad]
++--
++
++CREATE TABLE IF NOT EXISTS `dropped_normal_card_log` (
++`id` int NOT NULL UNIQUE AUTO_INCREMENT,
++`account_id` int(11) NOT NULL,
++`char_name` varchar(32) NOT NULL default '',
++`monster_id` int(11) NOT NULL,
++`monster_name` varchar(32) NOT NULL default '',
++`card_id` int(11) NOT NULL,
++`card_name` varchar(50) NOT NULL default '',
++`drop_map` varchar(32) NOT NULL default '',
++`drop_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
++PRIMARY KEY (`id`)
++) ENGINE=MyISAM;
++
++--
++-- Table structure for table `dropped_mvp_card_log` [Bad]
++--
++
++CREATE TABLE IF NOT EXISTS `dropped_mvp_card_log` (
++`id` int NOT NULL UNIQUE AUTO_INCREMENT,
++`account_id` int(11) NOT NULL,
++`char_name` varchar(32) NOT NULL default '',
++`mvp_id` int(11) NOT NULL,
++`mvp_name` varchar(32) NOT NULL default '',
++`card_id` int(11) NOT NULL,
++`card_name` varchar(50) NOT NULL default '',
++`drop_map` varchar(32) NOT NULL default '',
++`drop_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
++PRIMARY KEY (`id`)
++) ENGINE=MyISAM;
++
++--
++-- Table structure for table `dropped_mini_boss_card_log` [Bad]
++--
++
++CREATE TABLE IF NOT EXISTS `dropped_mini_boss_card_log` (
++`id` int NOT NULL UNIQUE AUTO_INCREMENT,
++`account_id` int(11) NOT NULL,
++`char_name` varchar(32) NOT NULL default '',
++`mini_boss_id` int(11) NOT NULL,
++`mini_boss_name` varchar(32) NOT NULL default '',
++`card_id` int(11) NOT NULL,
++`card_name` varchar(50) NOT NULL default '',
++`drop_map` varchar(32) NOT NULL default '',
++`drop_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
++PRIMARY KEY (`id`)
++) ENGINE=MyISAM;
+\ No newline at end of file
+diff --git a/src/map/battle.cpp b/src/map/battle.cpp
+index b8024e111..18cae79a7 100644
+--- a/src/map/battle.cpp
++++ b/src/map/battle.cpp
+@@ -9129,6 +9129,21 @@ static const struct _battle_data {
+ 	{ "idletime_mer_option",                &battle_config.idletime_mer_option,             0x1F,   0x1,    0xFFF,          },
+ 	{ "feature.refineui",                   &battle_config.feature_refineui,                1,      0,      1,              },
+ 
++	// MvP, Mini-Boss and Normal Card Ad and Log System [Bad]
++	{ "announcement_and_log_system",        &battle_config.announcement_and_log_system,     1,      0,      1,              },
++	{ "normal_card_announce_system",        &battle_config.normal_card_announce_system,     1,      0,      1,              },
++	{ "normal_card_announce",               &battle_config.normal_card_announce,            1,      0,      1,              },
++	{ "dropped_normal_card_log",            &battle_config.dropped_normal_card_log,         1,      0,      1,              },
++	{ "set_normal_announce_color",          &battle_config.set_normal_announce_color,       0xFFBB00,      0,INT_MAX,       },
++	{ "mvp_card_announce_system",           &battle_config.mvp_card_announce_system,        1,      0,      1,              },
++	{ "mvp_card_announce",                  &battle_config.mvp_card_announce,               1,      0,      1,              },
++	{ "dropped_mvp_card_log",               &battle_config.dropped_mvp_card_log,            1,      0,      1,              },
++	{ "set_mvp_announce_color",             &battle_config.set_mvp_announce_color,          0xFFBB00,      0,INT_MAX,       },
++	{ "mini_boss_card_announce_system",     &battle_config.mini_boss_card_announce_system,  1,      0,      1,              },
++	{ "mini_boss_card_announce",            &battle_config.mini_boss_card_announce,         1,      0,      1,              },
++	{ "dropped_mini_boss_card_log",         &battle_config.dropped_mini_boss_card_log,      1,      0,      1,              },
++	{ "set_mini_boss_announce_color",       &battle_config.set_mini_boss_announce_color,    0xFFBB00,      0,INT_MAX,       },
++
+ #include "../custom/battle_config_init.inc"
+ };
+ 
+diff --git a/src/map/battle.hpp b/src/map/battle.hpp
+index 1fd1e288c..ccfa61408 100644
+--- a/src/map/battle.hpp
++++ b/src/map/battle.hpp
+@@ -690,6 +690,21 @@ struct Battle_Config
+ 	int idletime_mer_option;
+ 	int feature_refineui;
+ 
++	// MvP, Mini-Boss and Normal Card Ad and Log System [Bad]
++	int announcement_and_log_system;
++	int normal_card_announce_system;
++	int normal_card_announce;
++	int dropped_normal_card_log;
++	int set_normal_announce_color;
++	int mvp_card_announce_system;
++	int mvp_card_announce;
++	int dropped_mvp_card_log;
++	int set_mvp_announce_color;
++	int mini_boss_card_announce_system;
++	int mini_boss_card_announce;
++	int dropped_mini_boss_card_log;
++	int set_mini_boss_announce_color;
++
+ #include "../custom/battle_config_struct.inc"
+ };
+ 
+diff --git a/src/map/mob.cpp b/src/map/mob.cpp
+index b66182e78..9db3b9f60 100644
+--- a/src/map/mob.cpp
++++ b/src/map/mob.cpp
+@@ -2855,6 +2855,52 @@ int mob_dead(struct mob_data *md, struct block_list *src, int type)
+ 			// Announce first, or else ditem will be freed. [Lance]
+ 			// By popular demand, use base drop rate for autoloot code. [Skotlex]
+ 			mob_item_drop(md, dlist, ditem, 0, battle_config.autoloot_adjust ? drop_rate : md->db->dropitem[i].rate, homkillonly || merckillonly);
++
++			// MvP, Mini-Boss and Normal Card Ad and Log System [Bad]
++			if (mvp_sd && battle_config.announcement_and_log_system) {
++
++				if (it->type == IT_CARD && !(md->get_bosstype() == BOSSTYPE_MINIBOSS) && !(md->get_bosstype() == BOSSTYPE_MVP) && battle_config.normal_card_announce_system) {
++
++					if (battle_config.normal_card_announce) {
++						char message[128];
++						sprintf (message, msg_txt(sd,451), mvp_sd->status.name, md->name, mapindex_id2name(mvp_sd->mapindex), it->ename.c_str(), (float)drop_rate/100);
++						intif_broadcast2(message, strlen(message) + 1, battle_config.set_normal_announce_color, 0x190, 12, 0, 0);
++					}
++
++					if (battle_config.dropped_normal_card_log) {
++						if ( SQL_ERROR == Sql_Query(mmysql_handle, "INSERT INTO dropped_normal_card_log (account_id, char_name, monster_id, monster_name, card_id, card_name, drop_map) VALUES ('%d', '%s', '%d', '%s', '%d', '%s', '%s')", mvp_sd->status.account_id, mvp_sd->status.name, md->mob_id, md->db->sprite.c_str(), it->nameid, it->name.c_str(),  mapindex_id2name(mvp_sd->mapindex))) // Log System [Bad]
++						Sql_ShowDebug(mmysql_handle);
++					}
++				}
++
++				if (it->type == IT_CARD && md->get_bosstype() == BOSSTYPE_MVP && battle_config.mvp_card_announce_system) {
++
++					if (battle_config.mvp_card_announce) {
++						char message[128];
++						sprintf (message, msg_txt(sd,451), mvp_sd->status.name, md->name, mapindex_id2name(mvp_sd->mapindex), it->ename.c_str(), (float)drop_rate/100);
++						intif_broadcast2(message, strlen(message) + 1, battle_config.set_mvp_announce_color, 0x190, 12, 0, 0);
++					}
++
++					if (battle_config.dropped_mvp_card_log) {
++						if ( SQL_ERROR == Sql_Query(mmysql_handle, "INSERT INTO dropped_mvp_card_log (account_id, char_name, mvp_id, mvp_name, card_id, card_name, drop_map) VALUES ('%d', '%s', '%d', '%s', '%d', '%s', '%s')", mvp_sd->status.account_id, mvp_sd->status.name, md->mob_id, md->db->sprite.c_str(), it->nameid, it->name.c_str(),  mapindex_id2name(mvp_sd->mapindex))) // Log System [Bad]
++						Sql_ShowDebug(mmysql_handle);
++					}
++				}
++
++				if (it->type == IT_CARD && md->get_bosstype() == BOSSTYPE_MINIBOSS && battle_config.mini_boss_card_announce_system) {
++
++					if (battle_config.mini_boss_card_announce) {
++						char message[128];
++						sprintf (message, msg_txt(sd,451), mvp_sd->status.name, md->name, mapindex_id2name(mvp_sd->mapindex), it->ename.c_str(), (float)drop_rate/100);
++						intif_broadcast2(message, strlen(message) + 1, battle_config.set_mini_boss_announce_color, 0x190, 12, 0, 0);
++					}
++
++					if (battle_config.dropped_mini_boss_card_log) {
++						if ( SQL_ERROR == Sql_Query(mmysql_handle, "INSERT INTO dropped_mini_boss_card_log (account_id, char_name, mini_boss_id, mini_boss_name, card_id, card_name, drop_map) VALUES ('%d', '%s', '%d', '%s', '%d', '%s', '%s')", mvp_sd->status.account_id, mvp_sd->status.name, md->mob_id, md->db->sprite.c_str(), it->nameid, it->name.c_str(),  mapindex_id2name(mvp_sd->mapindex))) // Log System [Bad]
++						Sql_ShowDebug(mmysql_handle);
++					}
++				}
++			}
+ 		}
+ 
+ 		// Ore Discovery [Celest]
+-- 
+2.33.0.windows.2
+
