@@ -35,11 +35,13 @@ With 2 items:
 ![Com 2 item charm](https://user-images.githubusercontent.com/14701742/137584290-bcc6efee-ff84-4c5c-9d43-175b824b5eb0.PNG)
 
 
+Content Author:
+hamsterdigital
 
 
+Updated later by:
+Frost
 
 
-
-Content Author: hamsterdigital
-Updated later by: Frost
-Updated later by: Bad
+Updated later by:
+Bad
