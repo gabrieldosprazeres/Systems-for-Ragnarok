@@ -22,6 +22,7 @@ Com 2 itens:
 
 ![Com 2 item charm](https://user-images.githubusercontent.com/14701742/137584290-bcc6efee-ff84-4c5c-9d43-175b824b5eb0.PNG)
 
+---
 
 EN:
 
