@@ -12,6 +12,8 @@ NOTA1: O jogador só receberá o bônus caso seja VIP, quando o VIP acabar, o b�
 
 NOTA2: Só funciona com o sistema de VIP nativo do emulador.
 
+---
+
 EN:
 
 Grants the VIP player additional movement speed.
