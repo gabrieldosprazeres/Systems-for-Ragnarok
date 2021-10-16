@@ -3,34 +3,36 @@
 PT-BR:
 
 Transforma o item em Tipo: Charm
-https://ibb.co/2gHB6fC
 
-Item 'Type: Charm' fica na aba 'etc' e n„o precisa estar equipado para fornecer o bÙnus.
+![item_db](https://user-images.githubusercontent.com/14701742/137584266-1dcc7b43-76a1-4311-90e9-5e9711e4f650.PNG)
+
+Item 'Type: Charm' fica na aba 'etc' e n√£o precisa estar equipado para fornecer o b√¥nus.
 
 Sem o item:
-https://ibb.co/51S0Ltr
+![Sem o item charm](https://user-images.githubusercontent.com/14701742/137584286-d37c06d1-30a6-42b9-a172-6672cc03cd79.PNG)
 
 Com 1 item:
-https://ibb.co/McVgWYM
+![Com o item charm](https://user-images.githubusercontent.com/14701742/137584287-9cadedf0-db2d-4600-af92-e81b1b177623.PNG)
 
 Com 2 itens:
-https://ibb.co/NjmJGDF
+![Com 2 item charm](https://user-images.githubusercontent.com/14701742/137584290-bcc6efee-ff84-4c5c-9d43-175b824b5eb0.PNG)
 
 EN:
 
 Makes the item Type: Charm
-https://ibb.co/2gHB6fC
+
+![item_db](https://user-images.githubusercontent.com/14701742/137584266-1dcc7b43-76a1-4311-90e9-5e9711e4f650.PNG)
 
 Item 'Type: Charm' is in the 'etc' tab and does not need to be equipped to provide the bonus.
 
 Without the item:
-https://ibb.co/51S0Ltr
+![Sem o item charm](https://user-images.githubusercontent.com/14701742/137584286-d37c06d1-30a6-42b9-a172-6672cc03cd79.PNG)
 
 With 1 item:
-https://ibb.co/McVgWYM
+![Com o item charm](https://user-images.githubusercontent.com/14701742/137584287-9cadedf0-db2d-4600-af92-e81b1b177623.PNG)
 
 With 2 items:
-https://ibb.co/NjmJGDF
+![Com 2 item charm](https://user-images.githubusercontent.com/14701742/137584290-bcc6efee-ff84-4c5c-9d43-175b824b5eb0.PNG)
 
 
 
