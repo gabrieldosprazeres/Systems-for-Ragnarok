@@ -1,0 +1,132 @@
+From f340e561cfefc282eef69c874d378422c0d8ddc7 Mon Sep 17 00:00:00 2001
+From: Gabriel dos Prazeres <gabrieldosprazeres@hotmail.com.br>
+Date: Fri, 15 Oct 2021 22:58:10 -0300
+Subject: [PATCH] Finishing system it_charm
+
+---
+ src/common/mmo.hpp           |  1 +
+ src/map/clif.cpp             |  2 +-
+ src/map/itemdb.cpp           |  2 ++
+ src/map/pc.cpp               |  5 +++++
+ src/map/script_constants.hpp |  1 +
+ src/map/status.cpp           | 10 ++++++++++
+ 6 files changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/src/common/mmo.hpp b/src/common/mmo.hpp
+index dd5fdf2a3..d409390cb 100644
+--- a/src/common/mmo.hpp
++++ b/src/common/mmo.hpp
+@@ -193,6 +193,7 @@ enum item_types {
+ 	IT_AMMO,    //10
+ 	IT_DELAYCONSUME,//11
+ 	IT_SHADOWGEAR,  //12
++	IT_CHARM,
+ 	IT_CASH = 18,
+ 	IT_MAX
+ };
+diff --git a/src/map/clif.cpp b/src/map/clif.cpp
+index ae9010d91..871f0e0cc 100644
+--- a/src/map/clif.cpp
++++ b/src/map/clif.cpp
+@@ -118,7 +118,7 @@ static inline int itemtype(t_itemid nameid) {
+ 		else
+ 			return IT_ARMOR;
+ 	}
+-	return ( type == IT_PETEGG ) ? IT_ARMOR : type;
++	return ( type == IT_PETEGG ) ? IT_ARMOR : (type == IT_CHARM) ? IT_ETC : type;
+ }
+ 
+ // TODO: doc
+diff --git a/src/map/itemdb.cpp b/src/map/itemdb.cpp
+index 2a3094ddf..119e733e8 100644
+--- a/src/map/itemdb.cpp
++++ b/src/map/itemdb.cpp
+@@ -1480,6 +1480,7 @@ const char* itemdb_typename(enum item_types type)
+ 		case IT_PETARMOR:       return "Pet Accessory";
+ 		case IT_AMMO:           return "Arrow/Ammunition";
+ 		case IT_DELAYCONSUME:   return "Delay-Consume Usable";
++		case IT_CHARM:          return "Charm";
+ 		case IT_SHADOWGEAR:     return "Shadow Equipment";
+ 		case IT_CASH:           return "Cash Usable";
+ 	}
+@@ -2907,6 +2908,7 @@ bool item_data::isStackable()
+ 		case IT_PETEGG:
+ 		case IT_PETARMOR:
+ 		case IT_SHADOWGEAR:
++		case IT_CHARM:
+ 			return false;
+ 	}
+ 	return true;
+diff --git a/src/map/pc.cpp b/src/map/pc.cpp
+index 746a1b76e..d29ed6cc8 100755
+--- a/src/map/pc.cpp
++++ b/src/map/pc.cpp
+@@ -5250,6 +5250,7 @@ enum e_additem_result pc_additem(struct map_session_data *sd,struct item *item,i
+ 	if(id->flag.autoequip)
+ 		pc_equipitem(sd, i, id->equip);
+ 
++	if (id->type == IT_CHARM) status_calc_pc(sd, SCO_NONE); //dh
+ 	/* rental item check */
+ 	if( item->expire_time ) {
+ 		if( time(NULL) > item->expire_time ) {
+@@ -5281,6 +5282,7 @@ enum e_additem_result pc_additem(struct map_session_data *sd,struct item *item,i
+ char pc_delitem(struct map_session_data *sd,int n,int amount,int type, short reason, e_log_pick_type log_type)
+ {
+ 	nullpo_retr(1, sd);
++	int mem = 0;
+ 
+ 	if(n < 0 || sd->inventory.u.items_inventory[n].nameid == 0 || amount <= 0 || sd->inventory.u.items_inventory[n].amount<amount || sd->inventory_data[n] == NULL)
+ 		return 1;
+@@ -5292,6 +5294,7 @@ char pc_delitem(struct map_session_data *sd,int n,int amount,int type, short rea
+ 	if( sd->inventory.u.items_inventory[n].amount <= 0 ){
+ 		if(sd->inventory.u.items_inventory[n].equip)
+ 			pc_unequipitem(sd,n,2|(!(type&4) ? 1 : 0));
++		mem = sd->inventory_data[n]->type;
+ 		memset(&sd->inventory.u.items_inventory[n],0,sizeof(sd->inventory.u.items_inventory[0]));
+ 		sd->inventory_data[n] = NULL;
+ 	}
+@@ -5302,6 +5305,8 @@ char pc_delitem(struct map_session_data *sd,int n,int amount,int type, short rea
+ 
+ 	pc_show_questinfo(sd);
+ 
++	if (mem == IT_CHARM) status_calc_pc(sd, SCO_NONE);
++
+ 	return 0;
+ }
+ 
+diff --git a/src/map/script_constants.hpp b/src/map/script_constants.hpp
+index 4389ad352..b404bcb1a 100644
+--- a/src/map/script_constants.hpp
++++ b/src/map/script_constants.hpp
+@@ -4099,6 +4099,7 @@
+ 	export_constant(IT_PETARMOR);
+ 	export_constant(IT_AMMO);
+ 	export_constant(IT_DELAYCONSUME);
++	export_constant(IT_CHARM);
+ 	export_constant(IT_SHADOWGEAR);
+ 	export_constant(IT_CASH);
+ 
+diff --git a/src/map/status.cpp b/src/map/status.cpp
+index 470074ef2..0ba4889b3 100644
+--- a/src/map/status.cpp
++++ b/src/map/status.cpp
+@@ -4275,6 +4275,16 @@ int status_calc_pc_sub(struct map_session_data* sd, enum e_status_calc_opt opt)
+ 	pc_delautobonus(*sd, sd->autobonus2, true);
+ 	pc_delautobonus(*sd, sd->autobonus3, true);
+ 
++	for (i = 0; i < MAX_INVENTORY; i++) {
++		if (!sd->inventory_data[i] || sd->inventory_data[i]->type != IT_CHARM)
++			continue;
++		if (sd->inventory_data[i]->script && sd->inventory_data[i]->elv <= sd->status.base_level && sd->inventory_data[i]->class_upper) {
++			run_script(sd->inventory_data[i]->script, 0, sd->bl.id, 0);
++			if (!calculating) //Abort, run_script retriggered this. [Skotlex]
++				return 1;
++		}
++	}
++
+ 	// Parse equipment
+ 	for (i = 0; i < EQI_MAX; i++) {
+ 		current_equip_item_index = index = sd->equip_index[i]; // We pass INDEX to current_equip_item_index - for EQUIP_SCRIPT (new cards solution) [Lupus]
+-- 
+2.33.0.windows.2
+
